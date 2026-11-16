@@ -1,0 +1,154 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { resolveStackItems, withBase } from '../config/site';
+import { DEFAULT_LANG, UI, localizePath, stripLangPrefix, type Lang } from '../i18n/translations';
+import ImageCarousel from './ImageCarousel.astro';
+import StackIcons from './StackIcons.astro';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  lang?: Lang;
+  showDivider?: boolean;
+}
+
+const { project, lang = DEFAULT_LANG, showDivider = false } = Astro.props;
+const t = UI[lang].project;
+const {
+  title,
+  tagline,
+  description,
+  year,
+  role,
+  status,
+  category,
+  stack,
+  metrics,
+  repoUrl,
+  liveUrl,
+  previewImage,
+  previewCaption,
+  gallery,
+} = project.data;
+
+const slug = stripLangPrefix(project.id);
+const href = withBase(localizePath(`/projects/${slug}`, lang));
+const stackItems = resolveStackItems(stack);
+const images =
+  gallery.length > 0
+    ? gallery
+    : previewImage
+      ? [{ src: previewImage, caption: previewCaption }]
+      : [];
+---
+
+<article class="w-full">
+  <!-- Centered blog-style project header inside clamp(0px, 95vw, 680px) -->
+  <div class="content-column text-center">
+    <h3 class="inline-block rounded-[2px] border border-[var(--border-strong)] bg-[var(--text)] px-3.5 py-1 text-lg font-semibold tracking-tight text-[var(--bg)] sm:text-xl">
+      <a href={href} class="hover:opacity-85 transition-opacity">
+        {title}
+      </a>
+    </h3>
+
+    <div class="mt-2 font-mono text-sm font-medium text-[var(--text-secondary)]">
+      {year}
+    </div>
+
+    <StackIcons items={stackItems} compact />
+  </div>
+
+  <!-- Narrative body constrained to clamp(0px, 95vw, 680px) -->
+  <div class="content-column mt-6 space-y-3.5 text-[15.5px] leading-[1.8] text-[var(--text-secondary)]">
+    <p class="font-medium text-[var(--text)]">{tagline}</p>
+    <p>{description}</p>
+
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 font-mono text-xs">
+      <a
+        href={href}
+        class="underline decoration-[var(--accent)] decoration-[1.5px] underline-offset-4 text-[var(--text)] hover:text-[var(--accent)] transition-colors"
+      >
+        {t.readCaseStudy}
+      </a>
+
+      {
+        liveUrl && (
+          <a
+            href={liveUrl}
+            target="_blank"
+            rel="noreferrer"
+            class="underline decoration-[var(--border-strong)] underline-offset-4 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
+          >
+            {t.liveDemo}
+          </a>
+        )
+      }
+
+      {
+        repoUrl && (
+          <a
+            href={repoUrl}
+            target="_blank"
+            rel="noreferrer"
+            class="underline decoration-[var(--border-strong)] underline-offset-4 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
+          >
+            {t.source}
+          </a>
+        )
+      }
+    </div>
+  </div>
+
+  <!-- 1. Standalone full-bleed image / simple carousel in wider breakout column (clamp(0px, 95vw, 1200px)) -->
+  <ImageCarousel images={images} altPrefix={title} />
+
+  <!-- 2. Telemetry & Specs constrained to text width (clamp(0px, 95vw, 680px)) -->
+  <div class="content-column mt-6 space-y-4">
+    {
+      metrics.length > 0 && (
+        <div class="surface-card rounded-[3px] p-5 sm:p-6">
+          <div class="space-y-3">
+            {metrics.map((metric) => (
+              <div class="grid grid-cols-12 items-center gap-3 text-xs">
+                <span class="col-span-5 truncate text-[var(--text-secondary)]" title={metric.label}>
+                  {metric.label}
+                </span>
+                <div class="col-span-5 h-2.5 w-full overflow-hidden rounded-[1px] border border-[var(--border)] bg-[var(--surface-subtle)]">
+                  <div
+                    class:list={[
+                      'h-full rounded-[1px]',
+                      metric.highlight ? 'bg-[var(--accent)]' : 'bg-[var(--text-muted)]/55',
+                    ]}
+                    style={`width: ${metric.ratio}%`}
+                  />
+                </div>
+                <span class="col-span-2 text-right font-mono text-[11px] font-medium text-[var(--text)]">
+                  {metric.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
+    <dl class="surface-card grid grid-cols-1 divide-y divide-[var(--border)] rounded-[3px] text-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <div class="px-4 py-3">
+        <dt class="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)]">{t.role}</dt>
+        <dd class="mt-1 text-[var(--text)]">{role}</dd>
+      </div>
+      <div class="px-4 py-3">
+        <dt class="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)]">{t.category}</dt>
+        <dd class="mt-1 text-[var(--text)]">{category}</dd>
+      </div>
+      <div class="px-4 py-3">
+        <dt class="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)]">{t.status}</dt>
+        <dd class="mt-1 inline-flex items-center gap-1.5 text-[var(--text)]">
+          <span class="h-1.5 w-1.5 rounded-full bg-[var(--accent)]"></span>
+          {status}
+        </dd>
+      </div>
+    </dl>
+  </div>
+
+  {showDivider && <hr class="section-divider mt-16 sm:mt-20" />}
+</article>

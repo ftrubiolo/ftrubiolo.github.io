@@ -1,0 +1,43 @@
+---
+title: "Mirage"
+tagline: "Workbench de escritorio para staging 3D, ajuste de materiales PBR y empaquetado glTF/WebAR."
+description: "Aplicación standalone construida con Electron, React 19 y Three.js para inspeccionar modelos, ajustar materiales físicos en tiempo real, empaquetar mapas ORM y exportar paquetes listos para web y realidad aumentada."
+year: "2026"
+role: "Creador"
+status: "Código abierto"
+category: "Herramienta Desktop & 3D"
+stack: ["Electron 34", "React 19", "TypeScript", "Three.js", "Tailwind CSS v4", "Zustand", "Sharp", "Vitest"]
+metrics:
+  - label: "Tests automatizados (31 suites)"
+    value: "589"
+    ratio: 96
+    highlight: true
+  - label: "Canales IPC validados (Zod)"
+    value: "44"
+    ratio: 84
+    highlight: true
+  - label: "Slots de mapas PBR"
+    value: "12"
+    ratio: 78
+    highlight: false
+  - label: "Líneas de código (TS/TSX)"
+    value: "~48k"
+    ratio: 90
+    highlight: false
+repoUrl: "https://github.com/ftrubiolo/mirage"
+previewImage: "/images/mirage-workbench.webp"
+previewCaption: "Mirage — viewport 3D en tiempo real, barra de métricas y panel de materiales PBR"
+featured: true
+order: 2
+---
+
+## Qué resuelve
+
+Validar modelos 3D, ajustar propiedades físicas (clearcoat, sheen, transmisión, máscaras alfa) y preparar paquetes livianos para e-commerce suele requerir abrir suites DCC pesadas como Blender para cambios menores. Mirage ofrece un entorno aislado y rápido enfocado en pipelines glTF 2.0 / WebGL.
+
+## Arquitectura e invariantes
+
+- **Frontera de seguridad estricta**: Separación limpia entre Main Process, Preload tipado (45 métodos) y Renderer sin código compartido, con lista blanca de rutas resuelta con `fs.realpath` y validación Zod en los 44 canales IPC.
+- **Contexto WebGL único y uniforms sin recompilar**: Exactamente un `<Canvas>` en toda la app; los sliders mutan directamente `MeshPhysicalMaterial` sin disparar recompilaciones innecesarias de shaders.
+- **Pipeline nativo de texturas**: Generación asíncrona de miniaturas `.webp` con `sharp` en threadpool de libuv, empaquetado multihilo de canales ORM (`R=AO, G=Roughness, B=Metalness`) y live-reload vía `chokidar`.
+- **Agent Studio & MCP**: Integración con modelos compatibles con OpenAI y clientes Model Context Protocol bajo aprobación Human-in-the-Loop y bóveda cifrada con `safeStorage`.

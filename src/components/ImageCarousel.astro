@@ -1,0 +1,161 @@
+---
+import { withBase } from '../config/site';
+
+export interface GalleryImage {
+  src: string;
+  caption?: string;
+}
+
+interface Props {
+  images: GalleryImage[];
+  altPrefix: string;
+}
+
+const { images, altPrefix } = Astro.props;
+const hasMultiple = images.length > 1;
+const firstCaption = images[0]?.caption ?? '';
+---
+
+{
+  images.length === 1 && (
+    <figure class="wide-column mt-8">
+      <div class="overflow-hidden rounded-[3px] border border-[var(--border)]">
+        <img
+          src={withBase(images[0].src)}
+          alt={images[0].caption || `${altPrefix} preview`}
+          class="block w-full object-cover"
+          loading="lazy"
+        />
+      </div>
+      {images[0].caption && (
+        <figcaption class="mt-2.5 text-center font-mono text-[11px] text-[var(--text-muted)]">
+          {images[0].caption}
+        </figcaption>
+      )}
+    </figure>
+  )
+}
+
+{
+  hasMultiple && (
+    <figure class="wide-column mt-8" data-carousel data-index="0" data-count={images.length}>
+      <div class="group relative overflow-hidden rounded-[3px] border border-[var(--border)]">
+        <div
+          class="flex transition-transform duration-300 ease-out"
+          data-carousel-track
+        >
+          {images.map((img, idx) => (
+            <div class="w-full shrink-0" data-carousel-slide data-caption={img.caption || ''}>
+              <img
+                src={withBase(img.src)}
+                alt={img.caption || `${altPrefix} (${idx + 1}/${images.length})`}
+                class="block w-full object-cover"
+                loading={idx === 0 ? 'eager' : 'lazy'}
+              />
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          data-carousel-prev
+          aria-label="Previous image"
+          class="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[2px] border border-[var(--border-strong)] bg-[var(--surface-solid)]/90 text-[var(--text)] transition-opacity hover:border-[var(--accent)] hover:text-[var(--accent)] cursor-pointer"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M10 3.5L5.5 8L10 12.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          data-carousel-next
+          aria-label="Next image"
+          class="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[2px] border border-[var(--border-strong)] bg-[var(--surface-solid)]/90 text-[var(--text)] transition-opacity hover:border-[var(--accent)] hover:text-[var(--accent)] cursor-pointer"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M6 3.5L10.5 8L6 12.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="mt-3 flex flex-col items-center justify-between gap-2 sm:flex-row">
+        <figcaption
+          data-carousel-caption
+          class="font-mono text-[11px] text-[var(--text-muted)] text-center sm:text-left"
+        >
+          {firstCaption}
+        </figcaption>
+
+        <div class="flex items-center gap-1.5 shrink-0" role="tablist" aria-label="Slide selector">
+          {images.map((_, idx) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={idx === 0 ? 'true' : 'false'}
+              aria-label={`Slide ${idx + 1}`}
+              data-carousel-dot={idx}
+              class:list={[
+                'h-1.5 rounded-[1px] transition-all cursor-pointer',
+                idx === 0 ? 'w-5 bg-[var(--accent)]' : 'w-2 bg-[var(--border-strong)] hover:bg-[var(--text-muted)]',
+              ]}
+            />
+          ))}
+        </div>
+      </div>
+    </figure>
+  )
+}
+
+<script is:inline>
+  (() => {
+    if (window.__carouselBound) return;
+    window.__carouselBound = true;
+
+    function goTo(carousel, nextIdx) {
+      const count = Number(carousel.getAttribute('data-count') || '0');
+      if (count <= 1) return;
+      const idx = ((nextIdx % count) + count) % count;
+      carousel.setAttribute('data-index', String(idx));
+
+      const track = carousel.querySelector('[data-carousel-track]');
+      if (track instanceof HTMLElement) {
+        track.style.transform = `translateX(-${idx * 100}%)`;
+      }
+
+      const slides = carousel.querySelectorAll('[data-carousel-slide]');
+      const captionEl = carousel.querySelector('[data-carousel-caption]');
+      if (captionEl && slides[idx]) {
+        captionEl.textContent = slides[idx].getAttribute('data-caption') || '';
+      }
+
+      carousel.querySelectorAll('[data-carousel-dot]').forEach((dot, i) => {
+        const active = i === idx;
+        dot.setAttribute('aria-selected', String(active));
+        dot.classList.toggle('w-5', active);
+        dot.classList.toggle('bg-[var(--accent)]', active);
+        dot.classList.toggle('w-2', !active);
+        dot.classList.toggle('bg-[var(--border-strong)]', !active);
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const carousel = target.closest('[data-carousel]');
+      if (!carousel) return;
+
+      const current = Number(carousel.getAttribute('data-index') || '0');
+      if (target.closest('[data-carousel-prev]')) {
+        goTo(carousel, current - 1);
+      } else if (target.closest('[data-carousel-next]')) {
+        goTo(carousel, current + 1);
+      } else {
+        const dot = target.closest('[data-carousel-dot]');
+        if (dot) {
+          goTo(carousel, Number(dot.getAttribute('data-carousel-dot') || '0'));
+        }
+      }
+    });
+  })();
+</script>

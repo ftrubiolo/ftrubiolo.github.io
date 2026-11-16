@@ -1,0 +1,220 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectBlogEntry from '../components/ProjectBlogEntry.astro';
+import StackIcons from '../components/StackIcons.astro';
+import { SITE, formatDate, withBase } from '../config/site';
+import { UI, getProjectsForLang, localizePath, type Lang } from '../i18n/translations';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = UI[lang];
+
+const allProjects = await getProjectsForLang(lang);
+const featuredProjects = allProjects.filter((p) => p.data.featured);
+
+const allPosts = SITE.features.writing
+  ? (await getCollection('posts'))
+      .filter((p) => !p.data.draft)
+      .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
+  : [];
+const recentPosts = allPosts.slice(0, 4);
+---
+
+<BaseLayout lang={lang} title={t.siteTitle} description={t.siteDescription}>
+  <!-- Hero: full-width section, content constrained to clamp(0px, 95vw, 680px) -->
+  <section class="w-full pt-16 pb-14 sm:pt-24 sm:pb-18">
+    <div class="content-column">
+      <h1 class="text-center text-3xl font-semibold tracking-tight text-[var(--text)] sm:text-[42px] sm:leading-[1.12]">
+        {t.hero.headingPrefix} {SITE.author}.
+      </h1>
+
+      <div class="mt-7 space-y-4 text-[16px] leading-[1.82] text-[var(--text-secondary)]">
+        <p>
+          {t.hero.p1Before} <strong class="font-medium text-[var(--text)]">{t.hero.p1Role}</strong> {t.hero.p1After}
+        </p>
+        <p>{t.hero.p2}</p>
+        <p>{t.hero.p3}</p>
+      </div>
+
+      <StackIcons items={SITE.stack} />
+    </div>
+
+    <hr class="section-divider mt-16 sm:mt-20" />
+  </section>
+
+  <!-- Projects: blog-journal flow with 680px text + 900px wide breakout frames -->
+  <section id="projects" class="w-full py-6 sm:py-10">
+    <div class="content-column text-center">
+      <h2 class="text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">
+        {t.sections.projects}
+      </h2>
+    </div>
+
+    <div class="mt-12 space-y-16 sm:space-y-20">
+      {
+        featuredProjects.map((project, idx) => (
+          <ProjectBlogEntry
+            project={project}
+            lang={lang}
+            showDivider={idx < featuredProjects.length - 1}
+          />
+        ))
+      }
+    </div>
+
+    <div class="content-column mt-12 text-center">
+      <a
+        href={withBase(localizePath('/projects', lang))}
+        class="btn-sharp font-mono text-xs"
+      >
+        {t.sections.viewAllProjects(allProjects.length)}
+      </a>
+    </div>
+
+    <hr class="section-divider mt-16 sm:mt-20" />
+  </section>
+
+  {
+    SITE.features.writing && recentPosts.length > 0 && (
+      <section id="writing" class="w-full py-6 sm:py-10">
+        <div class="content-column">
+          <h2 class="text-center text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">
+            {t.nav.writing}
+          </h2>
+
+          <div class="mt-10 divide-y divide-[var(--border)] border-y border-[var(--border)]">
+            {recentPosts.map((post) => (
+              <a
+                href={withBase(`/writing/${post.id}`)}
+                class="group block py-6 transition-colors hover:bg-[var(--surface-subtle)]/55 sm:px-3 sm:-mx-3 rounded-[2px]"
+              >
+                <div class="flex flex-wrap items-center gap-2.5 font-mono text-[11px] text-[var(--text-muted)]">
+                  <span class="text-[var(--accent-ink)] dark:text-[var(--accent-bright)]">
+                    {post.data.category}
+                  </span>
+                  <span>·</span>
+                  <time datetime={post.data.publishedAt.toISOString()}>
+                    {formatDate(post.data.publishedAt, lang)}
+                  </time>
+                  <span>·</span>
+                  <span>{post.data.readingTime}</span>
+                </div>
+
+                <div class="mt-2 flex items-baseline justify-between gap-4">
+                  <h3 class="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)] transition-colors">
+                    {post.data.title}
+                  </h3>
+                  <span
+                    class="font-mono text-sm text-[var(--text-muted)] transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[var(--accent)]"
+                    aria-hidden="true"
+                  >
+                    ↗
+                  </span>
+                </div>
+
+                <p class="mt-1.5 text-[15px] leading-relaxed text-[var(--text-secondary)]">
+                  {post.data.description}
+                </p>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <hr class="section-divider mt-16 sm:mt-20" />
+      </section>
+    )
+  }
+
+  {
+    SITE.features.experience && (
+      <section id="experience" class="w-full py-6 sm:py-10">
+        <div class="content-column">
+          <h2 class="text-center text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">
+            {t.sections.experience}
+          </h2>
+
+          <div class="mt-10 divide-y divide-[var(--border)] border-y border-[var(--border)]">
+            {SITE.experience.map((item) => (
+              <div class="py-6">
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 class="text-base font-semibold text-[var(--text)]">{item.role}</h3>
+                  <span class="font-mono text-xs text-[var(--text-muted)]">{item.period}</span>
+                </div>
+                <div class="mt-0.5 font-mono text-xs text-[var(--accent-ink)] dark:text-[var(--accent-bright)]">
+                  {item.company}
+                </div>
+                <p class="mt-2.5 text-[15px] leading-relaxed text-[var(--text-secondary)]">
+                  {item.summary}
+                </p>
+                <ul class="mt-3 space-y-1.5 text-sm text-[var(--text-secondary)]">
+                  {item.highlights.map((hl) => (
+                    <li class="flex items-start gap-2.5">
+                      <span class="mt-2 h-1 w-1 shrink-0 rounded-full bg-[var(--accent)]" aria-hidden="true" />
+                      <span>{hl}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <hr class="section-divider mt-16 sm:mt-20" />
+      </section>
+    )
+  }
+
+  <!-- Contact: full-width section, 680px column -->
+  <section id="contact" class="w-full pt-6 pb-8 sm:pt-10">
+    <div class="content-column">
+      <div class="surface-card rounded-[2px] p-6 sm:p-8 text-center">
+        <h2 class="text-xl font-semibold tracking-tight text-[var(--text)] sm:text-2xl">
+          {t.sections.contactTitle}
+        </h2>
+        <p class="mt-2.5 text-sm leading-relaxed text-[var(--text-secondary)]">
+          {t.sections.contactBody}
+        </p>
+
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <a href={`mailto:${SITE.email}`} class="btn-accent">
+            {t.sections.sendEmail}
+          </a>
+          <button
+            type="button"
+            data-copy-email={SITE.email}
+            data-copied-label={t.sections.copied}
+            class="btn-sharp cursor-pointer font-mono text-xs"
+          >
+            {t.sections.copyAddress}
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script is:inline>
+  (() => {
+    document.querySelectorAll('[data-copy-email]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const email = btn.getAttribute('data-copy-email');
+        if (!email) return;
+        const original = btn.textContent;
+        const copiedLabel = btn.getAttribute('data-copied-label') || 'Copied!';
+        try {
+          await navigator.clipboard.writeText(email);
+          btn.textContent = copiedLabel;
+          setTimeout(() => {
+            btn.textContent = original;
+          }, 1800);
+        } catch {
+          window.location.href = `mailto:${email}`;
+        }
+      });
+    });
+  })();
+</script>

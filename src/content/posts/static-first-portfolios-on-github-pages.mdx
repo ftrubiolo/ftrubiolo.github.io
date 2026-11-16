@@ -1,0 +1,40 @@
+---
+title: "Static-First Portfolios on GitHub Pages with Astro"
+description: "Notes on shipping zero-JavaScript-by-default pages, MDX content collections, and automatic base-path handling with GitHub Actions."
+publishedAt: 2026-11-02
+category: "Engineering"
+tags: ["astro", "github-pages", "architecture"]
+readingTime: "5 min read"
+coverTone: "indigo"
+featured: true
+---
+
+When hosting a personal portfolio and technical blog on GitHub Pages, the best stack is the one that stays fast for years with minimal maintenance.
+
+Shipping an Astro static build gives you native TypeScript content schemas for Markdown and MDX posts while emitting clean HTML and CSS—no hydration tax on static essays.
+
+## Handling GitHub Pages base paths cleanly
+
+One common paper cut with GitHub Pages is the difference between a user root site (`username.github.io`) and a project subpath (`username.github.io/portfolio`). Hardcoding `/writing/my-post` breaks as soon as a repository lives under a subpath.
+
+```ts
+export function withBase(path: string): string {
+  const base = import.meta.env.BASE_URL || '/';
+  if (!path || path === '/') return base;
+  const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
+```
+
+Paired with `actions/configure-pages@v5` in GitHub Actions, `SITE_URL` and `BASE_PATH` are injected automatically at build time—meaning the same codebase works on custom domains, root user pages, and project repositories alike.
+
+## Content collections as a lightweight CMS
+
+| Layer | Responsibility | Output |
+| :--- | :--- | :--- |
+| `src/content/posts/*.mdx` | Essays, notes & embedded components | Static HTML + RSS |
+| `src/content/projects/*.mdx` | Case studies & metric breakdowns | Static HTML cards |
+| `src/config/site.ts` | Author profile, nav & timeline | Typed single source |
+
+Everything compiles down to static assets in `dist/`, deploys in under thirty seconds, and remains easy to evolve section by section over time.

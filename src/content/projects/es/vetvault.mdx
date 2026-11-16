@@ -1,0 +1,41 @@
+---
+title: "VetVault"
+tagline: "Monorepo de gestión clínica veterinaria con historias médicas, integración SENASA y copiloto clínico con IA."
+description: "Ecosistema integral para clínicas veterinarias desarrollado en equipo para Prácticas Profesionalizantes I (2026) en el ISVR. Centraliza agenda, fichas médicas, validación profesional, pagos con Mercado Pago y asistencia clínica basada en Gemini."
+year: "2026"
+role: "Desarrollador Full-Stack (Equipo ISVR)"
+status: "Código abierto"
+category: "Full-Stack & Salud"
+stack: ["React 19", "TypeScript", "Fastify v5", "PostgreSQL 16", "Drizzle ORM", "MinIO S3", "Gemini AI", "Docker"]
+metrics:
+  - label: "Servicios en Docker Compose"
+    value: "4"
+    ratio: 85
+    highlight: true
+  - label: "Workspaces del monorepo"
+    value: "3"
+    ratio: 75
+    highlight: true
+  - label: "Integraciones externas"
+    value: "4"
+    ratio: 88
+    highlight: false
+  - label: "Integrantes del equipo"
+    value: "4"
+    ratio: 70
+    highlight: false
+repoUrl: "https://github.com/ftrubiolo/proyecto-vet-pp"
+featured: true
+order: 3
+---
+
+## Contexto
+
+Proyecto final desarrollado para **Prácticas Profesionalizantes I (2026)** en el **Instituto Superior Villa del Rosario (ISVR)** junto a Tomás Taborda, Valentín Hinojosa e Ismael Botella.
+
+## Arquitectura y funcionalidades
+
+- **Monorepo tipado con npm workspaces**: Backend en Fastify v5 + Drizzle ORM + PostgreSQL 16, aplicación web en React 19 + Vite 8 + Tailwind CSS v4, y paquete de tipos compartidos (`@vetvault/shared`).
+- **Historial clínico y vademécum**: Ficha de pacientes con seguimiento de alergias, peso, vacunas, recetas en PDF (`pdfmake`) y almacenamiento de adjuntos en MinIO / S3.
+- **Validaciones locales e integraciones**: Verificación de matrícula contra el padrón del Colegio de Veterinarios de Córdoba, consulta al vademécum de SENASA y suscripciones con Mercado Pago Checkout Pro.
+- **Copiloto clínico RAG**: Integración con Gemini (`@google/generative-ai`) contextualizada con el historial del paciente, rate limiting y control de cuota por rol.

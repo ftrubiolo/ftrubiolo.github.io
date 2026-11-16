@@ -1,0 +1,46 @@
+---
+title: "Sera Muebles"
+tagline: "E-commerce de mobiliario contemporáneo con personalizador 3D/WebAR en tiempo real y backoffice operativo."
+description: "Tienda oficial y plataforma de gestión para Sera Muebles en Córdoba, Argentina. Combina un catálogo configurable por slots con visualización 3D en el navegador, realidad aumentada sin apps y checkout con Mercado Pago sobre Supabase."
+year: "2026"
+role: "Desarrollador Full-Stack"
+status: "Producción"
+category: "E-Commerce & 3D Web"
+stack: ["React 19", "TypeScript", "Three.js", "Tailwind CSS v4", "Zustand", "Supabase", "Mercado Pago"]
+metrics:
+  - label: "Archivos fuente (TS/TSX)"
+    value: "152"
+    ratio: 88
+    highlight: true
+  - label: "Tablas PostgreSQL + RLS"
+    value: "26"
+    ratio: 82
+    highlight: true
+  - label: "Rutas públicas y admin"
+    value: "25+"
+    ratio: 76
+    highlight: false
+  - label: "Edge Functions (Deno)"
+    value: "3"
+    ratio: 60
+    highlight: false
+liveUrl: "https://seramuebles.ar"
+gallery:
+  - src: "/images/seramuebles-hero.webp"
+    caption: "Sera Muebles — portada editorial y catálogo de piezas contemporáneas (seramuebles.ar)"
+  - src: "/images/seramuebles-product.png"
+    caption: "Sera Muebles — página de producto con galería, visor 3D y realidad aumentada (AR)"
+featured: true
+order: 1
+---
+
+## Qué resuelve
+
+El mobiliario a medida suele obligar a elegir entre catálogos estáticos o combinatorias imposibles de SKUs. Sera Muebles unifica piezas simples y conjuntos bajo un modelo de personalización por slots conectado directamente a los acabados de taller.
+
+## Arquitectura y funcionalidades
+
+- **Personalizador 3D y WebAR**: Visualización en tiempo real con React Three Fiber e intercambio instantáneo de texturas PBR (maderas, telas y metales) sin recargar la geometría. Incluye handoff por QR y soporte directo para Apple Quick Look (`.usdz`) y Google Scene Viewer (`.glb`).
+- **Optimizador binario glTF en el navegador**: Parser propio (`glbOptimizer.ts`) que recomprime texturas pesadas y sanea atributos discontinuos o extensiones incompatibles con visores AR móviles.
+- **Checkout atómico y webhooks**: Cálculo de órdenes autorizado en servidor mediante Deno Edge Functions (`create-checkout`, `payment-webhook`), validación HMAC de Mercado Pago y transiciones idempotentes en PostgreSQL.
+- **Atelier Admin (`/admin`)**: Portal administrativo protegido con Supabase Auth que incluye analíticas con Recharts, editor multipestaña, importación masiva de paquetes 3D en `.zip` y gestión de pedidos y consultas.

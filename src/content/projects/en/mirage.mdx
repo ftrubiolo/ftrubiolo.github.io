@@ -1,0 +1,43 @@
+---
+title: "Mirage"
+tagline: "Standalone desktop workbench for 3D staging, PBR material authoring, and glTF/WebAR packaging."
+description: "Desktop application built with Electron, React 19, and Three.js to inspect 3D models, tune physical materials in real time, pack ORM channel maps, and export production web and AR packages."
+year: "2026"
+role: "Creator"
+status: "Open Source"
+category: "Desktop Tool & 3D"
+stack: ["Electron 34", "React 19", "TypeScript", "Three.js", "Tailwind CSS v4", "Zustand", "Sharp", "Vitest"]
+metrics:
+  - label: "Passing tests (31 suites)"
+    value: "589"
+    ratio: 96
+    highlight: true
+  - label: "Zod-validated IPC channels"
+    value: "44"
+    ratio: 84
+    highlight: true
+  - label: "PBR texture slots"
+    value: "12"
+    ratio: 78
+    highlight: false
+  - label: "Lines of TypeScript"
+    value: "~48k"
+    ratio: 90
+    highlight: false
+repoUrl: "https://github.com/ftrubiolo/mirage"
+previewImage: "/images/mirage-workbench.webp"
+previewCaption: "Mirage — real-time 3D viewport, status telemetry bar, and PBR material panel"
+featured: true
+order: 2
+---
+
+## Overview
+
+Validating 3D geometry, dialing in physical material parameters (clearcoat, sheen, transmission, alpha masks), and bundling lightweight assets for web e-commerce usually forces a round-trip into heavy DCC suites like Blender. Mirage provides a focused, high-speed environment tailored for glTF 2.0 / WebGL pipelines.
+
+## Architecture & Invariants
+
+- **Strict Trust Boundary**: Clean separation across Main, typed Preload (45 methods), and Renderer with zero shared code, whitelist path enforcement via `fs.realpath`, and Zod validation on all 44 IPC channels.
+- **Single WebGL Context & Zero-Recompile Uniforms**: Exactly one `<Canvas>` across the app; slider updates mutate `MeshPhysicalMaterial` uniforms directly without triggering unnecessary shader recompilations.
+- **Native Texture & ORM Pipeline**: Asynchronous `.webp` thumbnail generation via `sharp` on libuv, multi-threaded ORM channel packing (`R=AO, G=Roughness, B=Metalness`), and `.glb` live reload via `chokidar`.
+- **Agent Studio & MCP**: OpenAI-compatible streaming agent and Model Context Protocol client routed through a Human-in-the-Loop approval gate and `safeStorage`-encrypted key vault.

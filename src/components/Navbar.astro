@@ -1,0 +1,348 @@
+---
+import { SITE, getNavItems, withBase } from '../config/site';
+import { DEFAULT_LANG, UI, getAlternateLangHref, localizePath, type Lang } from '../i18n/translations';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = DEFAULT_LANG } = Astro.props;
+const t = UI[lang];
+const navItems = getNavItems(lang);
+const homeHref = withBase(localizePath('/', lang));
+const altLangHref = getAlternateLangHref(Astro.url.pathname, lang);
+const currentPath = Astro.url.pathname;
+
+function isActive(href: string): boolean {
+  if (href.includes('#')) return false;
+  const resolved = withBase(href);
+  if (resolved === homeHref) return currentPath === resolved;
+  return currentPath.startsWith(resolved);
+}
+---
+
+<!-- Spacer so initial content sits cleanly below the transparent fixed top bar -->
+<div class="h-16" aria-hidden="true"></div>
+
+<!-- Expanded top bar (visible at top of page, no background, no bottom border) -->
+<header
+  id="nav-expanded"
+  class="fixed inset-x-0 top-0 z-30 w-full transition-all duration-200 ease-out"
+>
+  <div class="flex h-16 w-full items-center justify-between px-5 sm:px-8">
+    <a
+      href={homeHref}
+      class="group inline-flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-[var(--text)]"
+    >
+      <!-- Dev terminal prompt SVG -->
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 20 20"
+        fill="none"
+        class="text-[var(--accent)] transition-transform duration-150 group-hover:scale-105"
+        aria-hidden="true"
+      >
+        <rect
+          x="1.75"
+          y="2.75"
+          width="16.5"
+          height="14.5"
+          rx="2"
+          stroke="currentColor"
+          stroke-width="1.6"
+        />
+        <path
+          d="M5.75 7.5L8.75 10L5.75 12.5"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M10.5 12.5H14.25"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
+      <span>{SITE.brand}</span>
+    </a>
+
+    <nav aria-label="Primary navigation" class="flex items-center gap-3 sm:gap-6">
+      <ul class="hidden items-center gap-6 sm:flex">
+        {
+          navItems.map((item) => (
+            <li>
+              <a
+                href={withBase(item.href)}
+                class:list={[
+                  'text-[13px] transition-colors',
+                  isActive(item.href)
+                    ? 'font-medium text-[var(--text)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)]',
+                ]}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="flex items-center gap-2">
+        <a
+          href={altLangHref}
+          aria-label={t.langSwitchAria}
+          title={t.langSwitchAria}
+          class="inline-flex h-8 items-center justify-center rounded-[2px] border border-[var(--border)] bg-[var(--surface)] px-2 font-mono text-[11px] font-medium tracking-wider text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+        >
+          {t.langSwitchShort}
+        </a>
+
+        <ThemeToggle label={t.themeToggleLabel} />
+      </div>
+
+      <button
+        type="button"
+        id="expanded-mobile-menu-btn"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+        class="inline-flex h-8 w-8 items-center justify-center rounded-[2px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] sm:hidden cursor-pointer"
+      >
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+          <path d="M2 4H13M2 7.5H13M2 11H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" />
+        </svg>
+      </button>
+    </nav>
+  </div>
+
+  <div
+    id="expanded-mobile-menu"
+    class="hidden mx-5 rounded-[2px] border border-[var(--border)] bg-[var(--surface-solid)]/95 px-5 py-4 backdrop-blur-md sm:hidden"
+  >
+    <ul class="flex flex-col gap-3">
+      {
+        navItems.map((item) => (
+          <li>
+            <a
+              href={withBase(item.href)}
+              class="block py-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text)]"
+            >
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</header>
+
+<!-- Compact floating dock (visible when scrolled down) -->
+<div
+  id="nav-compact"
+  class="fixed top-4 left-5 sm:left-8 z-40 pointer-events-none opacity-0 -translate-y-2 transition-all duration-200 ease-out"
+>
+  <div class="relative flex items-center gap-2.5">
+    <!-- Menu button -->
+    <button
+      type="button"
+      id="compact-menu-btn"
+      aria-label="Open navigation menu"
+      aria-expanded="false"
+      aria-controls="compact-menu-dropdown"
+      class="inline-flex h-9 w-10 items-center justify-center rounded-[1px] bg-[var(--text)] text-[var(--bg)] transition-opacity duration-150 hover:opacity-90 cursor-pointer"
+    >
+      <svg id="compact-icon-open" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M2.5 4.5H13.5M2.5 8H13.5M2.5 11.5H13.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" />
+      </svg>
+      <svg id="compact-icon-close" class="hidden" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" />
+      </svg>
+    </button>
+
+    <!-- Grouped LinkedIn / GitHub / Language / Theme buttons -->
+    <div class="inline-flex items-center divide-x divide-[var(--bg)]/20 rounded-[1px] bg-[var(--text)] text-[var(--bg)]">
+      <a
+        href={SITE.social.linkedin}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="LinkedIn"
+        title="LinkedIn"
+        class="inline-flex h-9 w-10 items-center justify-center transition-opacity hover:opacity-75"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M6.94 8.5H3.56V19.5H6.94V8.5ZM5.25 3.5C4.14 3.5 3.25 4.39 3.25 5.5C3.25 6.6 4.14 7.5 5.25 7.5C6.35 7.5 7.25 6.6 7.25 5.5C7.25 4.39 6.35 3.5 5.25 3.5ZM20.44 13.02C20.44 9.88 18.76 8.22 16.16 8.22C14.37 8.22 13.48 9.2 13.02 9.93V8.5H9.65C9.7 9.48 9.65 19.5 9.65 19.5H13.02V13.36C13.02 13.02 13.05 12.69 13.15 12.45C13.42 11.78 14.03 11.09 15.07 11.09C16.41 11.09 17.06 12.11 17.06 13.6V19.5H20.44V13.02Z" />
+        </svg>
+      </a>
+
+      <a
+        href={SITE.social.github}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="GitHub"
+        title="GitHub"
+        class="inline-flex h-9 w-10 items-center justify-center transition-opacity hover:opacity-75"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2Z" />
+        </svg>
+      </a>
+
+      <a
+        href={altLangHref}
+        aria-label={t.langSwitchAria}
+        title={t.langSwitchAria}
+        class="inline-flex h-9 w-10 items-center justify-center font-mono text-[11px] font-semibold tracking-wider transition-opacity hover:opacity-75"
+      >
+        {t.langSwitchShort}
+      </a>
+
+      <button
+        type="button"
+        data-theme-toggle
+        aria-label={t.themeToggleLabel}
+        title={t.themeToggleLabel}
+        class="inline-flex h-9 w-10 items-center justify-center transition-opacity hover:opacity-75 cursor-pointer"
+      >
+        <svg
+          class="dark:hidden"
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+        </svg>
+        <svg
+          class="hidden dark:block"
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Dropdown menu for compact dock -->
+    <nav
+      id="compact-menu-dropdown"
+      aria-label="Compact navigation"
+      class="hidden absolute top-full left-0 mt-2.5 w-48 rounded-[2px] border border-[var(--border-strong)] bg-[var(--surface-solid)] py-1.5"
+    >
+      <a
+        href={homeHref}
+        class="block px-3.5 py-2 text-xs font-medium text-[var(--text)] transition-colors hover:bg-[var(--surface-subtle)]"
+      >
+        {t.nav.home}
+      </a>
+      {
+        navItems.map((item) => (
+          <a
+            href={withBase(item.href)}
+            class="block px-3.5 py-2 text-xs text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text)]"
+          >
+            {item.label}
+          </a>
+        ))
+      }
+      <div class="my-1 border-t border-[var(--border)]"></div>
+      <a
+        href={`mailto:${SITE.email}`}
+        class="block px-3.5 py-2 font-mono text-[11px] text-[var(--accent-ink)] dark:text-[var(--accent-bright)] transition-colors hover:bg-[var(--surface-subtle)]"
+      >
+        {t.nav.email} ↗
+      </a>
+    </nav>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    const expanded = document.getElementById('nav-expanded');
+    const compact = document.getElementById('nav-compact');
+    const expBtn = document.getElementById('expanded-mobile-menu-btn');
+    const expMenu = document.getElementById('expanded-mobile-menu');
+    const cmpBtn = document.getElementById('compact-menu-btn');
+    const cmpMenu = document.getElementById('compact-menu-dropdown');
+    const iconOpen = document.getElementById('compact-icon-open');
+    const iconClose = document.getElementById('compact-icon-close');
+
+    function setCompactDropdown(open) {
+      if (!cmpMenu || !cmpBtn) return;
+      cmpMenu.classList.toggle('hidden', !open);
+      cmpBtn.setAttribute('aria-expanded', String(open));
+      if (iconOpen && iconClose) {
+        iconOpen.classList.toggle('hidden', open);
+        iconClose.classList.toggle('hidden', !open);
+      }
+    }
+
+    function syncScrollState() {
+      const scrolled = window.scrollY > 28;
+      if (expanded) {
+        expanded.classList.toggle('opacity-0', scrolled);
+        expanded.classList.toggle('-translate-y-2', scrolled);
+        expanded.classList.toggle('pointer-events-none', scrolled);
+      }
+      if (compact) {
+        compact.classList.toggle('opacity-0', !scrolled);
+        compact.classList.toggle('-translate-y-2', !scrolled);
+        compact.classList.toggle('pointer-events-none', !scrolled);
+      }
+      if (!scrolled) {
+        setCompactDropdown(false);
+      } else if (expMenu && expBtn) {
+        expMenu.classList.add('hidden');
+        expBtn.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    syncScrollState();
+    window.addEventListener('scroll', syncScrollState, { passive: true });
+
+    if (expBtn && expMenu) {
+      expBtn.addEventListener('click', () => {
+        const open = !expMenu.classList.contains('hidden');
+        expMenu.classList.toggle('hidden', open);
+        expBtn.setAttribute('aria-expanded', String(!open));
+      });
+    }
+
+    if (cmpBtn && cmpMenu) {
+      cmpBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !cmpMenu.classList.contains('hidden');
+        setCompactDropdown(!isOpen);
+      });
+
+      cmpMenu.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => setCompactDropdown(false));
+      });
+
+      document.addEventListener('click', (e) => {
+        if (compact && e.target instanceof Node && !compact.contains(e.target)) {
+          setCompactDropdown(false);
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setCompactDropdown(false);
+      });
+    }
+  })();
+</script>

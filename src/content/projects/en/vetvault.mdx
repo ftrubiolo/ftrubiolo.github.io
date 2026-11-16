@@ -1,0 +1,41 @@
+---
+title: "VetVault"
+tagline: "Veterinary clinic management monorepo with medical records, SENASA integration, and AI clinical copilot."
+description: "Comprehensive clinical and scheduling platform built as a team project for Prácticas Profesionalizantes I (2026) at ISVR. Centralizes patient charts, professional license checks, Mercado Pago billing, and Gemini-assisted workflows."
+year: "2026"
+role: "Full-Stack Developer (ISVR Team)"
+status: "Open Source"
+category: "Full-Stack & Healthcare"
+stack: ["React 19", "TypeScript", "Fastify v5", "PostgreSQL 16", "Drizzle ORM", "MinIO S3", "Gemini AI", "Docker"]
+metrics:
+  - label: "Docker Compose services"
+    value: "4"
+    ratio: 85
+    highlight: true
+  - label: "Monorepo workspaces"
+    value: "3"
+    ratio: 75
+    highlight: true
+  - label: "External integrations"
+    value: "4"
+    ratio: 88
+    highlight: false
+  - label: "Team size"
+    value: "4"
+    ratio: 70
+    highlight: false
+repoUrl: "https://github.com/ftrubiolo/proyecto-vet-pp"
+featured: true
+order: 3
+---
+
+## Context
+
+Final project built for **Prácticas Profesionalizantes I (2026)** at **Instituto Superior Villa del Rosario (ISVR)** alongside Tomás Taborda, Valentín Hinojosa, and Ismael Botella.
+
+## Architecture & Features
+
+- **Typed npm Workspaces Monorepo**: Fastify v5 + Drizzle ORM + PostgreSQL 16 API backend, React 19 + Vite 8 + Tailwind CSS v4 web app, and shared TypeScript contracts (`@vetvault/shared`).
+- **Clinical Records & Media**: Interactive pet charts tracking allergies, weight history, vaccinations, generated PDF prescriptions (`pdfmake`), and attachment storage in MinIO / S3.
+- **Domain Integrations**: License validation against Colegio de Veterinarios de Córdoba, SENASA medication and vaccine catalog lookup, and Mercado Pago Checkout Pro subscriptions.
+- **RAG Clinical Copilot**: Gemini (`@google/generative-ai`) assistant grounded in patient medical history with rate limiting and role-based call quotas.

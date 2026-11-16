@@ -1,0 +1,76 @@
+---
+interface Props {
+  label?: string;
+}
+
+const { label = 'Toggle color theme' } = Astro.props;
+---
+
+<button
+  type="button"
+  data-theme-toggle
+  aria-label={label}
+  title={label}
+  class="inline-flex h-8 w-8 items-center justify-center rounded-[2px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] cursor-pointer"
+>
+  <!-- Moon icon shown in light mode -->
+  <svg
+    class="dark:hidden"
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+  </svg>
+  <!-- Sun icon shown in dark mode -->
+  <svg
+    class="hidden dark:block"
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </svg>
+</button>
+
+<script is:inline>
+  (() => {
+    if (window.__themeToggleBound) return;
+    window.__themeToggleBound = true;
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    media.addEventListener('change', (e) => {
+      try {
+        if (localStorage.getItem('portfolio-theme')) return;
+      } catch {}
+      document.documentElement.classList.toggle('dark', e.matches);
+    });
+
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const btn = target.closest('[data-theme-toggle]');
+      if (!btn) return;
+
+      const root = document.documentElement;
+      const nextDark = !root.classList.contains('dark');
+      root.classList.toggle('dark', nextDark);
+      try {
+        localStorage.setItem('portfolio-theme', nextDark ? 'dark' : 'light');
+      } catch {}
+    });
+  })();
+</script>

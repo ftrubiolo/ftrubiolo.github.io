@@ -1,0 +1,211 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StackIcons from '../components/StackIcons.astro';
+import { SITE, resolveStackItems, withBase } from '../config/site';
+import { UI, localizePath, type Lang } from '../i18n/translations';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  lang: Lang;
+}
+
+const { project, lang } = Astro.props;
+const t = UI[lang].project;
+const { Content, headings } = await render(project);
+const {
+  title,
+  tagline,
+  description,
+  year,
+  role,
+  status,
+  category,
+  stack,
+  metrics,
+  repoUrl,
+  liveUrl,
+  previewImage,
+  previewCaption,
+  gallery,
+} = project.data;
+
+const sectionHeadings = headings.filter((h) => h.depth === 2);
+const projectsIndexHref = withBase(localizePath('/projects', lang));
+const stackItems = resolveStackItems(stack);
+const images =
+  gallery.length > 0
+    ? gallery
+    : previewImage
+      ? [{ src: previewImage, caption: previewCaption }]
+      : [];
+---
+
+<BaseLayout lang={lang} title={`${title} — ${SITE.author}`} description={description}>
+  <article class="relative w-full pt-12 pb-20 sm:pt-16">
+    <!-- Floating left TOC rail aligned with navbar (left-8) -->
+    <aside class="hidden xl:block xl:fixed xl:left-8 xl:top-20 xl:z-20 xl:w-44">
+      <a
+        href={projectsIndexHref}
+        class="inline-flex items-center gap-1.5 font-mono text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+      >
+        {t.allProjectsLink}
+      </a>
+
+      <nav aria-label="Case study sections" class="mt-4 border-t border-[var(--border)] pt-4">
+        <ul class="space-y-2 text-xs">
+          <li>
+            <a href="#overview" class="block py-0.5 font-medium text-[var(--text)] hover:text-[var(--accent)]">
+              {t.overview}
+            </a>
+          </li>
+          {
+            metrics.length > 0 && (
+              <li>
+                <a href="#metrics" class="block py-0.5 text-[var(--text-muted)] hover:text-[var(--text)]">
+                  {t.telemetryNav}
+                </a>
+              </li>
+            )
+          }
+          {
+            sectionHeadings.map((h) => (
+              <li>
+                <a href={`#${h.slug}`} class="block py-0.5 text-[var(--text-muted)] hover:text-[var(--text)]">
+                  {h.text}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Header constrained to clamp(0px, 95vw, 680px) -->
+    <header id="overview" class="content-column scroll-mt-24">
+      <div class="mb-6 xl:hidden">
+        <a
+          href={projectsIndexHref}
+          class="inline-flex items-center gap-1.5 font-mono text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+        >
+          {t.allProjectsLink}
+        </a>
+      </div>
+
+      <div class="text-center">
+        <div class="flex flex-wrap items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[var(--text-muted)]">
+          <span>{category}</span>
+          <span>·</span>
+          <span>{year}</span>
+          <span>·</span>
+          <span class="inline-flex items-center gap-1.5 text-[var(--accent-ink)] dark:text-[var(--accent-bright)]">
+            <span class="h-1.5 w-1.5 rounded-full bg-[var(--accent)]"></span>
+            {status}
+          </span>
+        </div>
+
+        <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--text)] sm:text-4xl">
+          {title}
+        </h1>
+
+        <p class="mt-3 text-base font-medium leading-snug text-[var(--text)] sm:text-lg">
+          {tagline}
+        </p>
+
+        <StackIcons items={stackItems} compact />
+
+        <div class="mt-5 flex flex-wrap items-center justify-center gap-4 font-mono text-xs">
+          <span class="text-[var(--text-muted)]">{t.role}: <span class="text-[var(--text)]">{role}</span></span>
+          {
+            liveUrl && (
+              <a
+                href={liveUrl}
+                target="_blank"
+                rel="noreferrer"
+                class="underline decoration-[var(--accent)] underline-offset-4 text-[var(--text)] hover:text-[var(--accent)]"
+              >
+                {t.liveDemo}
+              </a>
+            )
+          }
+          {
+            repoUrl && (
+              <a
+                href={repoUrl}
+                target="_blank"
+                rel="noreferrer"
+                class="underline decoration-[var(--border-strong)] underline-offset-4 text-[var(--text-secondary)] hover:text-[var(--text)]"
+              >
+                {t.source}
+              </a>
+            )
+          }
+        </div>
+      </div>
+    </header>
+
+    <!-- Wide breakout images rendered separately on detail page -->
+    {
+      images.length > 0 && (
+        <div class="wide-column mt-10 space-y-8">
+          {images.map((img, idx) => (
+            <figure>
+              <div class="overflow-hidden rounded-[3px] border border-[var(--border)]">
+                <img
+                  src={withBase(img.src)}
+                  alt={img.caption || `${title} (${idx + 1}/${images.length})`}
+                  class="block w-full object-cover"
+                  loading={idx === 0 ? 'eager' : 'lazy'}
+                />
+              </div>
+              {img.caption && (
+                <figcaption class="mt-2.5 text-center font-mono text-[11px] text-[var(--text-muted)]">
+                  {img.caption}
+                </figcaption>
+              )}
+            </figure>
+          ))}
+        </div>
+      )
+    }
+
+    {
+      metrics.length > 0 && (
+        <section id="metrics" class="content-column mt-8 scroll-mt-24">
+          <div class="surface-card rounded-[3px] p-5 sm:p-7">
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+              <h2 class="font-mono text-xs uppercase tracking-wider text-[var(--text-muted)]">
+                {t.benchmarks}
+              </h2>
+              <span class="font-mono text-[11px] text-[var(--text-muted)]">{year}</span>
+            </div>
+
+            <div class="mt-3 divide-y divide-[var(--border)]">
+              {metrics.map((m, idx) => (
+                <div class="grid grid-cols-12 items-center gap-4 py-3 text-xs">
+                  <span class="col-span-1 font-mono text-[var(--text-muted)]">{idx + 1}</span>
+                  <span class="col-span-4 font-medium text-[var(--text)]">{m.label}</span>
+                  <div class="col-span-5 h-2.5 overflow-hidden rounded-[1px] border border-[var(--border)] bg-[var(--surface-subtle)]">
+                    <div
+                      class:list={[
+                        'h-full rounded-[1px]',
+                        m.highlight ? 'bg-[var(--accent)]' : 'bg-[var(--text-muted)]/60',
+                      ]}
+                      style={`width: ${m.ratio}%`}
+                    />
+                  </div>
+                  <span class="col-span-2 text-right font-mono text-[var(--text)]">{m.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Case study prose in 680px content column -->
+    <div class="content-column mt-10 reading-prose !max-w-[680px]">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

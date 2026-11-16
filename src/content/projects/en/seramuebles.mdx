@@ -1,0 +1,46 @@
+---
+title: "Sera Muebles"
+tagline: "Contemporary furniture e-commerce with a real-time 3D/WebAR customizer and operational backoffice."
+description: "Production storefront and management platform for Sera Muebles in Córdoba, Argentina. Combines slot-based customization with browser 3D rendering, app-less mobile AR, and Mercado Pago checkout backed by Supabase."
+year: "2026"
+role: "Full-Stack Developer"
+status: "Production"
+category: "E-Commerce & 3D Web"
+stack: ["React 19", "TypeScript", "Three.js", "Tailwind CSS v4", "Zustand", "Supabase", "Mercado Pago"]
+metrics:
+  - label: "Source files (TS/TSX)"
+    value: "152"
+    ratio: 88
+    highlight: true
+  - label: "PostgreSQL tables + RLS"
+    value: "26"
+    ratio: 82
+    highlight: true
+  - label: "Public & admin routes"
+    value: "25+"
+    ratio: 76
+    highlight: false
+  - label: "Deno Edge Functions"
+    value: "3"
+    ratio: 60
+    highlight: false
+liveUrl: "https://seramuebles.ar"
+gallery:
+  - src: "/images/seramuebles-hero.webp"
+    caption: "Sera Muebles — editorial storefront hero and contemporary furniture catalog (seramuebles.ar)"
+  - src: "/images/seramuebles-product.png"
+    caption: "Sera Muebles — product page featuring image gallery, 3D viewer, and AR launch"
+featured: true
+order: 1
+---
+
+## Overview
+
+Made-to-order furniture quickly runs into SKU explosion when modeled naively. Sera Muebles unifies standalone pieces and sets under a slot-based customization model mapped directly to workshop finish libraries.
+
+## Architecture & Features
+
+- **Interactive 3D & WebAR Customizer**: Real-time React Three Fiber viewport with instant PBR texture swapping across woods, fabrics, and metals—plus QR desktop handoff, Apple Quick Look (`.usdz`), and Google Scene Viewer (`.glb`).
+- **In-Browser glTF/GLB Optimizer**: Custom binary parser (`glbOptimizer.ts`) that downscales heavy textures and sanitizes discontinuous UV attributes or extensions unsupported by mobile AR viewers.
+- **Atomic Checkout & Webhooks**: Server-authoritative order creation in Deno Edge Functions (`create-checkout`, `payment-webhook`), HMAC signature verification for Mercado Pago, and idempotent PostgreSQL state transitions.
+- **Atelier Admin (`/admin`)**: Auth-gated backoffice featuring Recharts analytics, a multi-tab product editor, bulk 3D ZIP package import, and order/inquiry management.

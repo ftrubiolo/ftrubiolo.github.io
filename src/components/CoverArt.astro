@@ -1,0 +1,75 @@
+---
+interface Props {
+  title: string;
+  category: string;
+  tone?: 'emerald' | 'slate' | 'indigo' | 'charcoal';
+}
+
+const { title, category, tone = 'emerald' } = Astro.props;
+
+const toneMap = {
+  emerald: {
+    stroke: '#41c9b4',
+    bg: 'from-[#41c9b4]/14 via-transparent to-[#2cb696]/8',
+  },
+  slate: {
+    stroke: '#64748b',
+    bg: 'from-slate-500/14 via-transparent to-slate-400/8',
+  },
+  indigo: {
+    stroke: '#5b6ee1',
+    bg: 'from-indigo-500/14 via-transparent to-indigo-400/8',
+  },
+  charcoal: {
+    stroke: '#41c9b4',
+    bg: 'from-zinc-500/14 via-transparent to-[#41c9b4]/10',
+  },
+}[tone];
+---
+
+<div
+  class:list={[
+    'relative aspect-[16/8] w-full overflow-hidden rounded-[3px] border border-[var(--border)] bg-gradient-to-br',
+    toneMap.bg,
+  ]}
+>
+  <svg
+    viewBox="0 0 800 400"
+    class="h-full w-full opacity-75"
+    preserveAspectRatio="xMidYMid slice"
+    aria-hidden="true"
+  >
+    <defs>
+      <pattern id={`grid-${tone}`} width="32" height="32" patternUnits="userSpaceOnUse">
+        <path
+          d="M 32 0 L 0 0 0 32"
+          fill="none"
+          stroke="currentColor"
+          stroke-opacity="0.07"
+          stroke-width="1"
+        />
+      </pattern>
+    </defs>
+    <rect width="800" height="400" fill={`url(#grid-${tone})`} />
+    <g fill="none" stroke={toneMap.stroke} stroke-opacity="0.45" stroke-width="1.2">
+      <path d="M 40 280 Q 220 120 400 220 T 760 150" />
+      <path d="M 40 315 Q 230 155 410 255 T 760 185" stroke-opacity="0.28" />
+      <path d="M 40 350 Q 240 190 420 290 T 760 220" stroke-opacity="0.16" />
+      <circle cx="400" cy="220" r="4" fill={toneMap.stroke} fill-opacity="0.7" />
+      <circle cx="585" cy="182" r="3" fill={toneMap.stroke} fill-opacity="0.5" />
+      <circle cx="215" cy="186" r="3" fill={toneMap.stroke} fill-opacity="0.5" />
+    </g>
+  </svg>
+
+  <div class="absolute inset-0 flex flex-col justify-between p-5 sm:p-7">
+    <div>
+      <span class="rounded-[2px] border border-[var(--border)] bg-[var(--surface-solid)]/90 px-2.5 py-1 font-mono text-[11px] text-[var(--text-secondary)]">
+        {category}
+      </span>
+    </div>
+
+    <div class="max-w-lg font-mono text-[11px] text-[var(--text-muted)] truncate">
+      {title}
+    </div>
+  </div>
+</div>

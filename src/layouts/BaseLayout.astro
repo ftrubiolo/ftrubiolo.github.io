@@ -1,0 +1,79 @@
+---
+import { SITE, withBase } from '../config/site';
+import { DEFAULT_LANG, UI, type Lang } from '../i18n/translations';
+import AsciiBackground from '../components/AsciiBackground.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+
+interface Props {
+  lang?: Lang;
+  title?: string;
+  description?: string;
+  ogType?: 'website' | 'article';
+}
+
+const {
+  lang = DEFAULT_LANG,
+  title = UI[lang].siteTitle,
+  description = UI[lang].siteDescription,
+  ogType = 'website',
+} = Astro.props;
+
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://ftrubiolo.github.io');
+---
+
+<!doctype html>
+<html lang={UI[lang].htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl.toString()} />
+    {
+      SITE.features.writing && (
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title={`${SITE.author} — Writing`}
+          href={withBase('/rss.xml')}
+        />
+      )
+    }
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl.toString()} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Prevent flash of incorrect theme before first paint (follows system theme by default) -->
+    <script is:inline>
+      (() => {
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        let saved = null;
+        try {
+          saved = localStorage.getItem('portfolio-theme');
+        } catch {}
+        const useDark = saved === 'dark' || (saved !== 'light' && systemDark);
+        document.documentElement.classList.toggle('dark', useDark);
+      })();
+    </script>
+  </head>
+  <body class="relative flex min-h-screen flex-col overflow-x-hidden">
+    <AsciiBackground />
+    <Navbar lang={lang} />
+    <main class="relative z-10 flex-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

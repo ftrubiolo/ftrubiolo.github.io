@@ -1,0 +1,43 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectBlogEntry from '../components/ProjectBlogEntry.astro';
+import { SITE } from '../config/site';
+import { UI, getProjectsForLang, type Lang } from '../i18n/translations';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = UI[lang].project;
+const projects = await getProjectsForLang(lang);
+---
+
+<BaseLayout
+  lang={lang}
+  title={`${t.projectsTitle} — ${SITE.author}`}
+  description={t.projectsSubtitle}
+>
+  <section class="w-full pt-16 pb-10 sm:pt-20">
+    <div class="content-column text-center">
+      <h1 class="text-3xl font-semibold tracking-tight text-[var(--text)] sm:text-4xl">
+        {t.projectsTitle}
+      </h1>
+      <p class="mt-3 text-base leading-relaxed text-[var(--text-secondary)]">
+        {t.projectsSubtitle}
+      </p>
+    </div>
+
+    <hr class="section-divider mt-12 sm:mt-14" />
+  </section>
+
+  <section class="w-full pt-4 pb-20">
+    <div class="space-y-16 sm:space-y-20">
+      {
+        projects.map((project, idx) => (
+          <ProjectBlogEntry project={project} lang={lang} showDivider={idx < projects.length - 1} />
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>

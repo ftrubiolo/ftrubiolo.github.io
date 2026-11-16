@@ -1,0 +1,16 @@
+---
+import ProjectDetailView from '../../../views/ProjectDetailView.astro';
+import { getProjectsForLang, stripLangPrefix } from '../../../i18n/translations';
+
+export async function getStaticPaths() {
+  const projects = await getProjectsForLang('en');
+  return projects.map((project) => ({
+    params: { slug: stripLangPrefix(project.id) },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+---
+
+<ProjectDetailView project={project} lang="en" />

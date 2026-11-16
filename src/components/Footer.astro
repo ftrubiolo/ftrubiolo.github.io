@@ -1,0 +1,12 @@
+---
+import { SITE } from '../config/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="relative z-10 mt-16 w-full sm:mt-20">
+  <hr class="section-divider" />
+  <div class="content-column py-10 text-center text-xs text-[var(--text-muted)]">
+    <span>© {year} {SITE.author}</span>
+  </div>
+</footer>

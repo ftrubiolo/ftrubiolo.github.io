@@ -1,0 +1,154 @@
+<!-- Persistent full-viewport ASCII topographic animation canvas (single unified background across all sections) -->
+<canvas
+  id="ascii-bg-canvas"
+  aria-hidden="true"
+  class="fixed inset-0 z-0 h-full w-full pointer-events-none select-none"
+></canvas>
+
+<script is:inline>
+  (() => {
+    const canvas = document.getElementById('ascii-bg-canvas');
+    if (!(canvas instanceof HTMLCanvasElement)) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const glyphs = [' ', ' ', ' ', '·', '.', ':', '-', '=', '+', '*', '#'];
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let width = 0;
+    let height = 0;
+    let cols = 0;
+    let rows = 0;
+    let cellW = 14;
+    let cellH = 20;
+    let dpr = 1;
+    let mouseX = -9999;
+    let mouseY = -9999;
+    let baseColor = 'rgba(24, 26, 27, 0.085)';
+    let accentColor = 'rgba(44, 182, 150, 0.24)';
+
+    function readColors() {
+      const styles = getComputedStyle(document.documentElement);
+      baseColor = styles.getPropertyValue('--ascii-color').trim() || baseColor;
+      accentColor = styles.getPropertyValue('--ascii-accent').trim() || accentColor;
+    }
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      cellW = width < 640 ? 15 : 14;
+      cellH = width < 640 ? 22 : 20;
+      cols = Math.ceil(width / cellW) + 1;
+      rows = Math.ceil(height / cellH) + 1;
+
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.font = '500 12px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace';
+      ctx.textBaseline = 'top';
+      readColors();
+    }
+
+    // Smooth dual-wave field producing restrained editorial contour lines
+    function fieldValue(x, y, t) {
+      const nx = x * 0.075;
+      const ny = y * 0.11;
+      const w1 = Math.sin(nx + t * 0.55) * Math.cos(ny - t * 0.35);
+      const w2 = Math.sin((nx * 0.65 - ny * 0.8) + t * 0.4);
+      const w3 = Math.cos((nx * 0.4 + ny * 0.5) - t * 0.25);
+      return (w1 + w2 * 0.75 + w3 * 0.5) / 2.25;
+    }
+
+    function drawFrame(t) {
+      ctx.clearRect(0, 0, width, height);
+
+      // Gentle edge-weighted mask so the center reading column stays clean and effortless to scan
+      const centerX = width * 0.5;
+      const fadeRadius = Math.min(width * 0.44, 380);
+
+      for (let r = 0; r < rows; r++) {
+        const py = r * cellH;
+        for (let c = 0; c < cols; c++) {
+          const px = c * cellW;
+          const v = fieldValue(c, r, t);
+          // Map [-1, 1] -> [0, 1]
+          const norm = (v + 1) * 0.5;
+
+          // Keep center reading zone slightly calmer (never vanishes completely so bg stays unified)
+          const dxCenter = Math.abs(px - centerX);
+          const centerDamp = dxCenter < fadeRadius ? 0.58 + 0.42 * (dxCenter / fadeRadius) : 1;
+
+          // Mouse proximity subtle shimmer
+          const dxMouse = px - mouseX;
+          const dyMouse = py - mouseY;
+          const distSq = dxMouse * dxMouse + dyMouse * dyMouse;
+          const nearMouse = distSq < 18000;
+
+          const intensity = norm * centerDamp + (nearMouse ? 0.16 * (1 - distSq / 18000) : 0);
+          if (intensity < 0.42) continue;
+
+          const idx = Math.min(
+            glyphs.length - 1,
+            Math.max(3, Math.floor(((intensity - 0.38) / 0.62) * (glyphs.length - 1))),
+          );
+          const ch = glyphs[idx];
+          if (ch === ' ') continue;
+
+          // Sparse emerald contour crests like note.com accent + withspecific precision
+          const isCrest = intensity > 0.86 || (nearMouse && intensity > 0.7);
+          ctx.fillStyle = isCrest ? accentColor : baseColor;
+          ctx.fillText(ch, px, py);
+        }
+      }
+    }
+
+    let rafId = 0;
+    let lastDraw = 0;
+    const frameInterval = 1000 / 24; // 24fps: smooth, low-power
+
+    function loop(now) {
+      if (now - lastDraw >= frameInterval) {
+        lastDraw = now;
+        drawFrame(now * 0.001);
+      }
+      rafId = requestAnimationFrame(loop);
+    }
+
+    const observer = new MutationObserver(() => {
+      readColors();
+      if (reducedMotion) drawFrame(1.4);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    window.addEventListener('resize', () => {
+      resize();
+      if (reducedMotion) drawFrame(1.4);
+    });
+
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      },
+      { passive: true },
+    );
+
+    window.addEventListener(
+      'pointerleave',
+      () => {
+        mouseX = -9999;
+        mouseY = -9999;
+      },
+      { passive: true },
+    );
+
+    resize();
+    if (reducedMotion) {
+      drawFrame(1.4);
+    } else {
+      rafId = requestAnimationFrame(loop);
+    }
+  })();
+</script>

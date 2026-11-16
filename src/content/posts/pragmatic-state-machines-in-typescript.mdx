@@ -1,0 +1,24 @@
+---
+title: "Pragmatic State Machines in Frontend Interfaces"
+description: "Replacing tangled boolean flags with small discriminated unions for predictable UI transitions."
+publishedAt: 2026-09-24
+category: "Engineering"
+tags: ["typescript", "patterns", "frontend"]
+readingTime: "3 min read"
+coverTone: "charcoal"
+featured: false
+---
+
+Almost every subtle UI bug starts with three innocent booleans: `isLoading`, `isError`, and `isSuccess`. Sooner or later, an interrupted request leaves two of them `true` at the same time.
+
+Modeling async UI state with a small discriminated union eliminates impossible combinations at compile time:
+
+```ts
+type RequestState<T> =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'ready'; data: T };
+```
+
+You do not need a heavyweight library to get 90% of the benefits of a state machine. Making invalid states unrepresentable in TypeScript is usually enough to keep complex interactive components predictable.

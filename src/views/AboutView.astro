@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE, withBase } from '../config/site';
+import { UI, type Lang } from '../i18n/translations';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = UI[lang].about;
+const navT = UI[lang].nav;
+---
+
+<BaseLayout
+  lang={lang}
+  title={`${t.title} — ${SITE.author}`}
+  description={`${t.title} ${SITE.author}`}
+>
+  <section class="w-full pt-16 pb-20 sm:pt-20">
+    <div class="content-column">
+      <h1 class="text-center text-3xl font-semibold tracking-tight text-[var(--text)] sm:text-4xl">
+        {SITE.author}
+      </h1>
+
+      <p class="mt-6 text-[17px] leading-[1.85] text-[var(--text-secondary)]">
+        {t.bio}
+      </p>
+
+      <p class="mt-4 text-[17px] leading-[1.85] text-[var(--text-secondary)]">
+        {t.p2}
+      </p>
+
+      <div class="mt-10 border-t border-[var(--border)] pt-8">
+        <h2 class="font-mono text-xs uppercase tracking-wider text-[var(--text-muted)]">
+          {t.coreFocus}
+        </h2>
+
+        <div class="mt-5 grid gap-4 sm:grid-cols-3">
+          {
+            t.focusAreas.map((area) => (
+              <div class="surface-card rounded-[2px] p-4">
+                <h3 class="text-sm font-semibold text-[var(--text)]">{area.title}</h3>
+                <p class="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">
+                  {area.detail}
+                </p>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="mt-10 border-t border-[var(--border)] pt-8">
+        <h2 class="font-mono text-xs uppercase tracking-wider text-[var(--text-muted)]">
+          {t.linksContact}
+        </h2>
+
+        <dl class="mt-4 divide-y divide-[var(--border)] border-y border-[var(--border)] text-sm">
+          <div class="flex items-center justify-between py-3.5">
+            <dt class="font-mono text-xs text-[var(--text-muted)]">{navT.email}</dt>
+            <dd>
+              <a href={`mailto:${SITE.email}`} class="font-mono text-xs text-[var(--text)] hover:text-[var(--accent)]">
+                {SITE.email} ↗
+              </a>
+            </dd>
+          </div>
+          <div class="flex items-center justify-between py-3.5">
+            <dt class="font-mono text-xs text-[var(--text-muted)]">GitHub</dt>
+            <dd>
+              <a href={SITE.social.github} target="_blank" rel="noreferrer" class="font-mono text-xs text-[var(--text)] hover:text-[var(--accent)]">
+                {SITE.handle} ↗
+              </a>
+            </dd>
+          </div>
+          <div class="flex items-center justify-between py-3.5">
+            <dt class="font-mono text-xs text-[var(--text-muted)]">LinkedIn</dt>
+            <dd>
+              <a href={SITE.social.linkedin} target="_blank" rel="noreferrer" class="font-mono text-xs text-[var(--text)] hover:text-[var(--accent)]">
+                LinkedIn ↗
+              </a>
+            </dd>
+          </div>
+          {
+            SITE.features.writing && (
+              <div class="flex items-center justify-between py-3.5">
+                <dt class="font-mono text-xs text-[var(--text-muted)]">RSS Feed</dt>
+                <dd>
+                  <a href={withBase('/rss.xml')} class="font-mono text-xs text-[var(--text)] hover:text-[var(--accent)]">
+                    /rss.xml →
+                  </a>
+                </dd>
+              </div>
+            )
+          }
+        </dl>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
