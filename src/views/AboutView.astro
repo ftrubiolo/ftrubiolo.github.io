@@ -80,6 +80,14 @@ const navT = UI[lang].nav;
               </a>
             </dd>
           </div>
+          <div class="flex items-center justify-between py-3.5">
+            <dt class="font-mono text-xs text-[var(--text-muted)]">CV (PDF)</dt>
+            <dd>
+              <a href={withBase('/cv.pdf')} target="_blank" rel="noreferrer" class="font-mono text-xs text-[var(--text)] hover:text-[var(--accent)]">
+                cv.pdf ↗
+              </a>
+            </dd>
+          </div>
           {
             SITE.features.writing && (
               <div class="flex items-center justify-between py-3.5">

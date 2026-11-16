@@ -1,6 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="4" fill="#181a1b" />
-  <rect x="6" y="6" width="8" height="8" rx="1" fill="#41c9b4" />
-  <rect x="18" y="6" width="8" height="8" rx="1" stroke="#e7e9eb" stroke-opacity="0.35" stroke-width="1.5" />
-  <rect x="6" y="18" width="20" height="8" rx="1" stroke="#e7e9eb" stroke-opacity="0.65" stroke-width="1.5" />
+  <rect width="32" height="32" rx="6" fill="#1e2123" />
+  <g transform="translate(4 4) scale(1.2)">
+    <rect
+      x="1.75"
+      y="2.75"
+      width="16.5"
+      height="14.5"
+      rx="2"
+      stroke="#41c9b4"
+      stroke-width="1.6"
+    />
+    <path
+      d="M5.75 7.5L8.75 10L5.75 12.5"
+      stroke="#41c9b4"
+      stroke-width="1.6"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M10.5 12.5H14.25"
+      stroke="#41c9b4"
+      stroke-width="1.6"
+      stroke-linecap="round"
+    />
+  </g>
 </svg>
