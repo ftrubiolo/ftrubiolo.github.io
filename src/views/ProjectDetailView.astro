@@ -52,17 +52,26 @@ const images =
         {t.allProjectsLink}
       </a>
 
-      <nav aria-label="Case study sections" class="mt-4 border-t border-[var(--border)] pt-4">
+      <nav aria-label="Case study sections" data-toc-nav class="mt-4 border-t border-[var(--border)] pt-4">
         <ul class="space-y-2 text-xs">
           <li>
-            <a href="#overview" class="block py-0.5 font-medium text-[var(--text)] hover:text-[var(--accent)]">
+            <a
+              href="#overview"
+              data-toc-link="overview"
+              aria-current="location"
+              class="block py-0.5 font-medium text-[var(--accent-ink)] dark:text-[var(--accent-bright)] transition-colors"
+            >
               {t.overview}
             </a>
           </li>
           {
             metrics.length > 0 && (
               <li>
-                <a href="#metrics" class="block py-0.5 text-[var(--text-muted)] hover:text-[var(--text)]">
+                <a
+                  href="#metrics"
+                  data-toc-link="metrics"
+                  class="block py-0.5 text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+                >
                   {t.telemetryNav}
                 </a>
               </li>
@@ -71,7 +80,11 @@ const images =
           {
             sectionHeadings.map((h) => (
               <li>
-                <a href={`#${h.slug}`} class="block py-0.5 text-[var(--text-muted)] hover:text-[var(--text)]">
+                <a
+                  href={`#${h.slug}`}
+                  data-toc-link={h.slug}
+                  class="block py-0.5 text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+                >
                   {h.text}
                 </a>
               </li>
@@ -208,4 +221,80 @@ const images =
       <Content />
     </div>
   </article>
+
+  <script is:inline>
+    (() => {
+      const nav = document.querySelector('[data-toc-nav]');
+      if (!nav) return;
+
+      const links = Array.from(nav.querySelectorAll('[data-toc-link]'));
+      const sections = links
+        .map((link) => {
+          const id = link.getAttribute('data-toc-link');
+          const el = id ? document.getElementById(id) : null;
+          return id && el ? { id, el, link } : null;
+        })
+        .filter(Boolean);
+
+      if (sections.length === 0) return;
+
+      const activeClasses = ['font-medium', 'text-[var(--accent-ink)]', 'dark:text-[var(--accent-bright)]'];
+      const inactiveClasses = ['text-[var(--text-muted)]', 'hover:text-[var(--text)]'];
+
+      let currentActiveId = '';
+      let rafId = 0;
+
+      function applyActive(id) {
+        if (id === currentActiveId) return;
+        currentActiveId = id;
+
+        for (const item of sections) {
+          const isActive = item.id === id;
+          if (isActive) {
+            item.link.classList.remove(...inactiveClasses);
+            item.link.classList.add(...activeClasses);
+            item.link.setAttribute('aria-current', 'location');
+          } else {
+            item.link.classList.remove(...activeClasses);
+            item.link.classList.add(...inactiveClasses);
+            item.link.removeAttribute('aria-current');
+          }
+        }
+      }
+
+      function syncActiveSection() {
+        rafId = 0;
+        const offset = 136;
+        const atBottom =
+          window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+
+        if (atBottom) {
+          applyActive(sections[sections.length - 1].id);
+          return;
+        }
+
+        let active = sections[0].id;
+        for (const item of sections) {
+          if (item.el.getBoundingClientRect().top <= offset) {
+            active = item.id;
+          } else {
+            break;
+          }
+        }
+
+        applyActive(active);
+      }
+
+      function scheduleSync() {
+        if (rafId) return;
+        rafId = window.requestAnimationFrame(syncActiveSection);
+      }
+
+      syncActiveSection();
+      window.addEventListener('scroll', scheduleSync, { passive: true });
+      window.addEventListener('resize', scheduleSync, { passive: true });
+      window.addEventListener('hashchange', () => window.requestAnimationFrame(syncActiveSection));
+      window.addEventListener('load', syncActiveSection);
+    })();
+  </script>
 </BaseLayout>

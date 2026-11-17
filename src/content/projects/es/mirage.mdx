@@ -1,43 +1,115 @@
 ---
 title: "Mirage"
-tagline: "Workbench de escritorio para staging 3D, ajuste de materiales PBR y empaquetado glTF/WebAR."
-description: "Aplicación standalone construida con Electron, React 19 y Three.js para inspeccionar modelos, ajustar materiales físicos en tiempo real, empaquetar mapas ORM y exportar paquetes listos para web y realidad aumentada."
+tagline: "Workbench de escritorio para staging 3D, calibración de materiales PBR y empaquetado glTF/AR."
+description: "Aplicación standalone construida con Electron 34, React 19 y Three.js para inspeccionar modelos 3D, ajustar materiales físicos en tiempo real, empaquetar mapas ORM, gestionar variantes de acabado y exportar paquetes listos para web y realidad aumentada."
 year: "2026"
 role: "Creador"
 status: "Código abierto"
 category: "Herramienta Desktop & 3D"
 stack: ["Electron 34", "React 19", "TypeScript", "Three.js", "Tailwind CSS v4", "Zustand", "Sharp", "Vitest"]
 metrics:
-  - label: "Tests automatizados (31 suites)"
-    value: "589"
+  - label: "Tests automatizados (36 suites)"
+    value: "624"
     ratio: 96
     highlight: true
   - label: "Canales IPC validados (Zod)"
-    value: "44"
-    ratio: 84
+    value: "49"
+    ratio: 86
     highlight: true
   - label: "Slots de mapas PBR"
     value: "12"
     ratio: 78
     highlight: false
   - label: "Líneas de código (TS/TSX)"
-    value: "~48k"
-    ratio: 90
+    value: "~40.4k"
+    ratio: 88
     highlight: false
 repoUrl: "https://github.com/ftrubiolo/mirage"
-previewImage: "/images/mirage-workbench.webp"
-previewCaption: "Mirage — viewport 3D en tiempo real, barra de métricas y panel de materiales PBR"
+gallery:
+  - src: "/images/mirage-workbench.png"
+    caption: "Mirage Slate — viewport 3D en tiempo real con gizmos de transformación, barra de telemetría y estudio de materiales PBR"
+  - src: "/images/mirage-hub.png"
+    caption: "Studio Hub — portales de trabajo, acceso directo al modelo activo y grilla de modelos recientes con miniaturas WebP"
 featured: true
 order: 2
 ---
+import Callout from '../../../components/Callout.astro';
+import { withBase } from '../../../config/site';
 
 ## Qué resuelve
 
-Validar modelos 3D, ajustar propiedades físicas (clearcoat, sheen, transmisión, máscaras alfa) y preparar paquetes livianos para e-commerce suele requerir abrir suites DCC pesadas como Blender para cambios menores. Mirage ofrece un entorno aislado y rápido enfocado en pipelines glTF 2.0 / WebGL.
+Validar geometría 3D, calibrar propiedades físicas de materiales (`clearcoat`, `sheen`, `transmission`, `ior`, máscaras alfa) y preparar activos livianos para e-commerce web y realidad aumentada suele obligar a abrir suites DCC pesadas como Blender por ajustes menores.
 
-## Arquitectura e invariantes
+**Mirage** reemplaza ese ida y vuelta con un workbench de escritorio diseñado específicamente para pipelines glTF 2.0 y WebGL/AR en tiempo real: combina edición PBR instantánea, auditoría métrica de escala, catálogo local de modelos y empaquetado automatizado en una sola aplicación Electron.
 
-- **Frontera de seguridad estricta**: Separación limpia entre Main Process, Preload tipado (45 métodos) y Renderer sin código compartido, con lista blanca de rutas resuelta con `fs.realpath` y validación Zod en los 44 canales IPC.
-- **Contexto WebGL único y uniforms sin recompilar**: Exactamente un `<Canvas>` en toda la app; los sliders mutan directamente `MeshPhysicalMaterial` sin disparar recompilaciones innecesarias de shaders.
-- **Pipeline nativo de texturas**: Generación asíncrona de miniaturas `.webp` con `sharp` en threadpool de libuv, empaquetado multihilo de canales ORM (`R=AO, G=Roughness, B=Metalness`) y live-reload vía `chokidar`.
-- **Agent Studio & MCP**: Integración con modelos compatibles con OpenAI y clientes Model Context Protocol bajo aprobación Human-in-the-Loop y bóveda cifrada con `safeStorage`.
+## Viewport 3D y pipeline PBR en tiempo real
+
+El viewport funciona sobre **Three.js** y **@react-three/fiber** con navegación de cámara orientada a CAD, gizmos de transformación (`translate`, `rotate`, `scale`), presets HDRI más carga de entornos propios, sombras de contacto, cotas dimensionales dinámicas (`m`, `cm`, `mm`, `in`) y canales de depuración aislados (Albedo, Normal, Roughness, Metalness, AO, Emissive y Wireframe).
+
+Dos invariantes mantienen la fluidez a 60 Hz incluso en escenas multimaterial:
+
+- **Contexto WebGL único**: Existe exactamente un `<Canvas>` en toda la aplicación; su `frameloop` se suspende fuera del workbench para conservar el estado sin consumir GPU en segundo plano, mientras que vistas secundarias copian frames mediante `viewportBridge` (`preserveDrawingBuffer: true`).
+- **Uniforms sin recompilar shaders**: `pbrController` muta directamente las instancias de `THREE.MeshPhysicalMaterial` fuera del ciclo de React. Los sliders escalares (`roughness`, `metalness`, `normalScale`, `ior`) nunca disparan `needsUpdate`, mientras que los cruces `0 ↔ >0` en factores estructurales (`clearcoat`, `sheen`, `transmission`) recompilan el shader solo cuando hace falta.
+- **Live-reload y Undo/Redo**: `chokidar` vigila el `.glb` activo en disco para recargar cambios al instante, junto con transacciones en `CommandManager` para deshacer/rehacer sobre 12 slots de mapas PBR y múltiples materiales por malla.
+
+## Catálogo de activos, empaquetado y exportación AR
+
+Mirage organiza los modelos locales como entradas estructuradas (`entry.json` + binarios copiados) a lo largo de seis vistas principales: **Hub**, **Workbench**, **Model Library**, **Entry Detail**, **Settings** y **Agent Studio**.
+
+<figure class="wide">
+  <img
+    src={withBase('/images/mirage-library.png')}
+    alt="Vista Model Library de Mirage mostrando miniaturas WebP generadas, dimensiones y conteo de polígonos"
+    class="!my-0 block w-full"
+    loading="lazy"
+  />
+  <figcaption class="mt-2.5 text-center font-mono text-[11px] text-[var(--text-muted)]">
+    Model Library — catálogo en grilla/tabla con dimensiones, presupuesto de triángulos, estado activo y regeneración por lotes de posters
+  </figcaption>
+</figure>
+
+- **Perfiles de acabado y variantes**: Cada entrada registra variantes de acabado y paletas de colorways en disco, permitiendo alternarlas en el viewport y hornear cada variante por separado al exportar.
+- **Motor nativo de texturas y miniaturas**: Un servicio en proceso con `@janhapke/sharp-electron` genera miniaturas `.webp` en el threadpool de libuv (`~3–5 ms`, con deduplicación de pedidos y límite de 4 tareas concurrentes), mientras que el empaquetado de canales ORM (`R=AO, G=Roughness, B=Metalness`), inversión de canal Y en normales e inversión de roughness corren en worker (`texturePacker.ts`) con fallback en HTML5 Canvas (`canvasOrmPacker.ts`).
+- **Exportación y auditoría de rendimiento**: El Export Studio combina un **Performance & Geometry Audit** (conteo de polígonos, draw calls por malla y tamaño `.glb`) con captura de posters transparentes WebP/PNG, exportación `.glb` y `.usdz` para Apple Quick Look, y paquetes `.zip` listos para web y AR.
+
+<figure class="wide">
+  <img
+    src={withBase('/images/mirage-entry-detail.png')}
+    alt="Ficha técnica de activo y perfiles de variantes en Mirage Entry Detail"
+    class="!my-0 block w-full"
+    loading="lazy"
+  />
+  <figcaption class="mt-2.5 text-center font-mono text-[11px] text-[var(--text-muted)]">
+    Entry Detail — ficha técnica del modelo, metrología de malla y perfiles de variantes de acabado
+  </figcaption>
+</figure>
+
+## Sistema de diseño y motor de temas
+
+Toda la interfaz sigue el **Mirage Operations Design System**: radios arquitectónicos de `0px–2px`, divisores `1px` en lugar de sombras decorativas, `Instrument Sans` combinado con `JetBrains Mono` tabular para metrología y **más de 29 primitivas UI reutilizables**, verificadas automáticamente por `designSystemCompliance.test.ts`.
+
+<figure class="wide">
+  <img
+    src={withBase('/images/mirage-themes.png')}
+    alt="Selector de apariencia y temas en Mirage Settings con paletas integradas y tema enlazado de Omarchy"
+    class="!my-0 block w-full"
+    loading="lazy"
+  />
+  <figcaption class="mt-2.5 text-center font-mono text-[11px] text-[var(--text-muted)]">
+    Appearance &amp; Theme — paletas calibradas de fábrica junto a un tema Omarchy enlazado por symlink con hot-reload y modos Claro/Oscuro/Sistema
+  </figcaption>
+</figure>
+
+Incluye cuatro paletas base (**Mirage Slate**, **Basalt Crimson**, **Blueprint Cobalt**, **Amber Instrument**) y observa `~/.config/mirage/themes/*.json` (incluidos symlinks) mediante `chokidar` para que generadores externos como **Omarchy** o **Pywal** actualicen al vuelo tanto los tokens de UI como los colores del viewport 3D.
+
+## Modelo de seguridad y Agent Studio experimental
+
+Dado que el renderer procesa activos binarios no confiables (`.glb`, `.gltf`, `.hdr`, `.webp`) y respuestas de modelos LLM externos, el Main Process trata al renderer como un cliente no confiable bajo una frontera IPC estricta:
+
+- **Renderer aislado y Preload tipado**: `sandbox: true`, `contextIsolation: true`, `nodeIntegration: false`, Content-Security-Policy en producción y un puente plano `window.electronAPI` de 51 métodos sin lógica de negocio compartida.
+- **Confinamiento de rutas y validación Zod**: Toda lectura/escritura y stream `local-asset://` pasa por `accessPolicy.ts` (resolución de symlinks con `fs.realpath` y contención vía `path.relative`), esquemas Zod en los 49 canales IPC (bloqueando prototype pollution) y almacenamiento cifrado con `safeStorage` en `vault.ts`.
+- **Contención de fallos por vista**: Error boundaries independientes aíslan cada vista y modal, respaldados por stores Zustand separados por dominio (`modelStore`, `pbrMaterialStore`, `variantStore`, `viewportStore`, `appStore`, `agentStore`) coordinados en `workbenchActions.ts`.
+
+<Callout label="Subsistema Experimental">
+  **AI Agent Studio & MCP** ofrece streaming SSE compatible con OpenAI, 6 herramientas reversibles sobre la escena (`set_pbr_parameter`, `toggle_pbr_slot`, `set_environment_preset`, `set_debug_channel`, `audit_geometry`, `apply_material_preset`) y soporte para servidores declarados en `mcp_config.json` con entorno acotado y aprobación Human-in-the-Loop. Tal como documenta el repositorio, este subsistema se mantiene en estado **experimental e inconcluso**.
+</Callout>

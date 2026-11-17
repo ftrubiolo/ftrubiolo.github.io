@@ -1,43 +1,115 @@
 ---
 title: "Mirage"
-tagline: "Standalone desktop workbench for 3D staging, PBR material authoring, and glTF/WebAR packaging."
-description: "Desktop application built with Electron, React 19, and Three.js to inspect 3D models, tune physical materials in real time, pack ORM channel maps, and export production web and AR packages."
+tagline: "Standalone desktop workbench for 3D model staging, PBR material calibration, and glTF/AR packaging."
+description: "Desktop application built with Electron 34, React 19, and Three.js to inspect 3D models, tune physical materials in real time, pack ORM channel maps, manage finish variants, and export production web and AR packages."
 year: "2026"
 role: "Creator"
 status: "Open Source"
 category: "Desktop Tool & 3D"
 stack: ["Electron 34", "React 19", "TypeScript", "Three.js", "Tailwind CSS v4", "Zustand", "Sharp", "Vitest"]
 metrics:
-  - label: "Passing tests (31 suites)"
-    value: "589"
+  - label: "Passing tests (36 suites)"
+    value: "624"
     ratio: 96
     highlight: true
   - label: "Zod-validated IPC channels"
-    value: "44"
-    ratio: 84
+    value: "49"
+    ratio: 86
     highlight: true
   - label: "PBR texture slots"
     value: "12"
     ratio: 78
     highlight: false
-  - label: "Lines of TypeScript"
-    value: "~48k"
-    ratio: 90
+  - label: "Source lines (TS/TSX)"
+    value: "~40.4k"
+    ratio: 88
     highlight: false
 repoUrl: "https://github.com/ftrubiolo/mirage"
-previewImage: "/images/mirage-workbench.webp"
-previewCaption: "Mirage — real-time 3D viewport, status telemetry bar, and PBR material panel"
+gallery:
+  - src: "/images/mirage-workbench.png"
+    caption: "Mirage Slate — real-time 3D workbench with transform gizmos, telemetry bar, and PBR material studio"
+  - src: "/images/mirage-hub.png"
+    caption: "Studio Hub — workspace portals, active model resume bar, and recent assets with generated WebP thumbnails"
 featured: true
 order: 2
 ---
+import Callout from '../../../components/Callout.astro';
+import { withBase } from '../../../config/site';
 
 ## Overview
 
-Validating 3D geometry, dialing in physical material parameters (clearcoat, sheen, transmission, alpha masks), and bundling lightweight assets for web e-commerce usually forces a round-trip into heavy DCC suites like Blender. Mirage provides a focused, high-speed environment tailored for glTF 2.0 / WebGL pipelines.
+Validating 3D geometry, dialing in physical material parameters (`clearcoat`, `sheen`, `transmission`, `ior`, alpha masks), and preparing lightweight assets for web e-commerce and mobile AR usually forces a slow round-trip into heavy DCC suites like Blender for minor adjustments.
 
-## Architecture & Invariants
+**Mirage** replaces that round-trip with a focused desktop workbench built specifically for glTF 2.0 and real-time WebGL/AR pipelines—combining real-time PBR authoring, metric scale auditing, local asset management, and automated texture/export packaging in a single Electron application.
 
-- **Strict Trust Boundary**: Clean separation across Main, typed Preload (45 methods), and Renderer with zero shared code, whitelist path enforcement via `fs.realpath`, and Zod validation on all 44 IPC channels.
-- **Single WebGL Context & Zero-Recompile Uniforms**: Exactly one `<Canvas>` across the app; slider updates mutate `MeshPhysicalMaterial` uniforms directly without triggering unnecessary shader recompilations.
-- **Native Texture & ORM Pipeline**: Asynchronous `.webp` thumbnail generation via `sharp` on libuv, multi-threaded ORM channel packing (`R=AO, G=Roughness, B=Metalness`), and `.glb` live reload via `chokidar`.
-- **Agent Studio & MCP**: OpenAI-compatible streaming agent and Model Context Protocol client routed through a Human-in-the-Loop approval gate and `safeStorage`-encrypted key vault.
+## Real-Time 3D Workbench & Material Pipeline
+
+The viewport runs on **Three.js** and **@react-three/fiber** with CAD-oriented camera controls, transform gizmos (`translate`, `rotate`, `scale`), HDRI lighting presets plus custom environment uploads, contact shadows, dynamic bounding-box dimensions (`m`, `cm`, `mm`, `in`), and isolated debug render passes (Albedo, Normal, Roughness, Metalness, AO, Emissive, and Wireframe).
+
+Two rendering invariants keep interaction smooth at 60 Hz across complex multi-material meshes:
+
+- **Single WebGL Context**: Exactly one `<Canvas>` exists across the entire application; its `frameloop` is gated on the active view so state survives navigation without background GPU churn, while secondary previews copy frames via `viewportBridge` (`preserveDrawingBuffer: true`).
+- **Zero-Recompile Material Uniforms**: `pbrController` mutates `THREE.MeshPhysicalMaterial` instances directly outside React's render cycle. Scalar sliders (`roughness`, `metalness`, `normalScale`, `ior`) never raise `needsUpdate`, whereas `0 ↔ >0` facility-factor crossings (`clearcoat`, `sheen`, `transmission`) trigger controlled shader recompilation only when required.
+- **Live Asset Reload**: `chokidar` watches the active `.glb` on disk and refreshes geometry on save, paired with `CommandManager` transactions for multi-step undo/redo across 12 PBR map slots and multi-material mesh targeting.
+
+## Asset Library, Texture Packing & AR Export
+
+Mirage treats local 3D assets as structured entries (`entry.json` + copied binary assets) across six top-level views: **Hub**, **Workbench**, **Model Library**, **Entry Detail**, **Settings**, and **Agent Studio**.
+
+<figure class="wide">
+  <img
+    src={withBase('/images/mirage-library.png')}
+    alt="Mirage Model Library grid showing generated WebP thumbnails, dimensions, and polygon counts"
+    class="!my-0 block w-full"
+    loading="lazy"
+  />
+  <figcaption class="mt-2.5 text-center font-mono text-[11px] text-[var(--text-muted)]">
+    Model Library — grid/table catalog with dimensions, triangle budgets, active workbench status, and batch poster regeneration
+  </figcaption>
+</figure>
+
+- **Multi-Variant Finish Profiles**: Each catalog entry tracks finish profiles and colorway pools on disk, allowing instant switching in the 3D viewport and per-variant baking at export time.
+- **Native Texture & Thumbnail Engine**: An in-process `@janhapke/sharp-electron` service generates `.webp` thumbnails on Node's libuv threadpool (`~3–5 ms` with deduplicated in-flight requests and a 4-task concurrency cap), while heavy ORM channel packing (`R=AO, G=Roughness, B=Metalness`), normal Y-flips, and roughness inversions run in a dedicated worker (`texturePacker.ts`) with an HTML5 Canvas fallback (`canvasOrmPacker.ts`).
+- **Production Export & Audits**: The Export Studio pairs a **Performance & Geometry Audit** (polygon budgets, mesh draw calls, `.glb` size thresholds) with transparent WebP/PNG poster capture, standalone `.glb` and Apple Quick Look `.usdz` baking, and complete Web/AR `.zip` bundles.
+
+<figure class="wide">
+  <img
+    src={withBase('/images/mirage-entry-detail.png')}
+    alt="Mirage Entry Detail technical sheet and finish variant cards"
+    class="!my-0 block w-full"
+    loading="lazy"
+  />
+  <figcaption class="mt-2.5 text-center font-mono text-[11px] text-[var(--text-muted)]">
+    Entry Detail — asset technical sheet, mesh metrology, and multi-variant finish profiles
+  </figcaption>
+</figure>
+
+## Design System & Swappable Theme Engine
+
+Every interface surface follows the **Mirage Operations Design System**: `0px–2px` architectural radii, `1px` hairline borders instead of decorative drop shadows, `Instrument Sans` paired with tabular `JetBrains Mono` metrology, and **29+ reusable UI primitives**—all enforced automatically by `designSystemCompliance.test.ts`.
+
+<figure class="wide">
+  <img
+    src={withBase('/images/mirage-themes.png')}
+    alt="Mirage Settings Appearance and Theme selector with built-in palettes and Omarchy live-linked theme"
+    class="!my-0 block w-full"
+    loading="lazy"
+  />
+  <figcaption class="mt-2.5 text-center font-mono text-[11px] text-[var(--text-muted)]">
+    Appearance &amp; Theme — built-in studio palettes alongside a hot-reloaded Omarchy symlink theme and Light/Dark/System mode controls
+  </figcaption>
+</figure>
+
+Mirage ships with four calibrated palettes (**Mirage Slate**, **Basalt Crimson**, **Blueprint Cobalt**, **Amber Instrument**) and watches `~/.config/mirage/themes/*.json` (including symlinks) via `chokidar` so external generators such as **Omarchy** or **Pywal** hot-swap both UI tokens and 3D viewport colors in real time.
+
+## Security Model & Experimental Agent Studio
+
+Because the renderer parses untrusted binary models (`.glb`, `.gltf`, `.hdr`, `.webp`) and relays external LLM responses, Electron's main process treats the renderer as an untrusted caller across a strict IPC boundary:
+
+- **Sandboxed Renderer & Typed Preload**: `sandbox: true`, `contextIsolation: true`, `nodeIntegration: false`, production Content-Security-Policy, and a flat 51-method `window.electronAPI` bridge with zero shared business logic.
+- **Root-Confined Access Policy**: Every file operation and `local-asset://` stream passes through `accessPolicy.ts` (`fs.realpath` symlink resolution + `path.relative` containment), Zod payload schemas on all 49 IPC channels (with prototype-pollution key rejection), and atomic `safeStorage` credential encryption in `vault.ts`.
+- **Per-View Error Containment**: Separate React error boundaries isolate each top-level view and modal, backed by modular domain Zustand stores (`modelStore`, `pbrMaterialStore`, `variantStore`, `viewportStore`, `appStore`, `agentStore`) coordinated via `workbenchActions.ts`.
+
+<Callout label="Experimental Subsystem">
+  **AI Agent Studio & MCP** provides OpenAI-compatible SSE streaming, 6 undoable scene-scoped tools (`set_pbr_parameter`, `toggle_pbr_slot`, `set_environment_preset`, `set_debug_channel`, `audit_geometry`, `apply_material_preset`), and declared-only `mcp_config.json` servers with scoped environments and a Human-in-the-Loop approval gate. As noted in the repository, this subsystem remains **experimental and unfinished**.
+</Callout>
